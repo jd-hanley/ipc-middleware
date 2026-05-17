@@ -17,10 +17,11 @@
 #include <cstring>
 #include <unistd.h>
 #include <stdlib.h>
+#include <cstdint>
 
 #define SOCKET_NAME "/tmp/237yeh2y162twh2.socket"
 #define LISTEN_BACKLOG 50
-#define BUFFER_SIZE 12
+#define BUFFER_SIZE 1
 
 int main(void)
 {
@@ -28,13 +29,13 @@ int main(void)
     int                         ret;
     int                         connection_socket;
     int                         data_socket;
-    int                         result;
-    ssize_t                     r,w;
+    uint8_t                     result;
+    ssize_t                     r,s;
     struct sockaddr_un          name;
-    char                        buffer[BUFFER_SIZE];
+    uint8_t                     buffer[BUFFER_SIZE];
 
     /* Create a local socket */
-    connection_socket = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    connection_socket = socket(AF_UNIX, SOCK_STREAM, 0);
     if (connection_socket == -1)
     {
         std::perror("Error obtaining new socket");
@@ -84,24 +85,21 @@ int main(void)
         for (;;)
         {
             /* Wait for the next data packet */
-            r = read(data_socket, buffer, sizeof(buffer));
+            r = recv(data_socket, buffer, sizeof(buffer), 0);
             if (r == -1)
             {
                 std::perror("Error during read");
                 exit(EXIT_FAILURE);
             }
 
-            /* Ensure buffer is null terminated */
-            buffer[sizeof(buffer) - 1] = 0;
-
             /* Handle commands */
-            if (!strncmp(buffer, "DOWN", sizeof(buffer)))
+            if (buffer[0] == 0xFE)
             {
                 down_flag = 1;
                 continue;
             }
 
-            if (!strncmp(buffer, "END", sizeof(buffer)))
+            if (buffer[0] == 0xFF)
             {
                 break;
             }
@@ -111,15 +109,14 @@ int main(void)
                 continue;
             }
 
-            result += atoi(buffer);
+            result += buffer[0];
         }
 
         /* Send result */
-        sprintf(buffer, "%d", result);
-        w = write(data_socket, buffer, strlen(buffer) + 1);
-        if (w == -1)
+        s = send(data_socket, &result, 1, 0);
+        if (s == -1)
         {
-            std::perror("Error during write");
+            std::perror("Error during send");
             exit(EXIT_FAILURE);
         }
 
