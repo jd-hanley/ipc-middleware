@@ -1,4 +1,4 @@
-#define SOCKET_NAME "/tmp/237yeh2y162twh2.socket"
+#define SOCKET_NAME "/tmp/mysocket"
 #define LISTEN_BACKLOG 50
 #define BUFFER_SIZE 1
 
@@ -71,28 +71,25 @@ int main(void)
         s = send(data_socket, &val, 1, 0);
 
         // Need to check the user input, they may have requested to break out
-        if (val == 0xFF)
+        if (val == 0xFE || val == 0xFF)
         {
-            break;
-        }
-
-        if (val == 0xFE)
-        {
-            val = 0xFF;
-            s = send(data_socket, &val, 1, 0);
             break;
         }
     }
 
-    // Receive the result from the server
-    r = recv(data_socket, buffer, sizeof(buffer), 0);
-    if (r == -1) 
+    if (val != 0xFF)
     {
-        std::perror("Error during read");
-        exit(EXIT_FAILURE);
+        // Receive the result from the server
+        r = recv(data_socket, buffer, sizeof(buffer), 0);
+        if (r == -1) 
+        {
+            std::perror("Error during read");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Result = %d\n", buffer[0]);
     }
 
-    printf("Result = %d\n", buffer[0]);
 
     /* Close socket.  */
 

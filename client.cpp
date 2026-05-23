@@ -11,8 +11,7 @@
 #include <unistd.h>
 #include <cstdint>
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int                 ret;
     int                 data_socket;
@@ -79,7 +78,8 @@ main(int argc, char *argv[])
 
     // r = read(data_socket, buffer, sizeof(buffer));
     r = recv(data_socket, buffer, sizeof(buffer), 0);
-    if (r == -1) {
+    if (r == -1) 
+    {
         std::perror("Error during read");
         exit(EXIT_FAILURE);
     }
